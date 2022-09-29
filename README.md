@@ -90,6 +90,8 @@ Happy hacking 😁!
 
 ## Hacking Thoughts 
 
+Aloha! This challenge has taken me 5 days. My background is with Javascript/Typescript/Nodejs/Go and with Kotlin i have just knowhow. I spent 3 days getting a refresher on Kotlin and 2 days getting into the project.
+
 At look at the challenge, it is clear we are developing a recurring payment charging scheduler. In order to design the proper architecture approach i thought of the following solutions:
 
 - Create an endpoint `POST /rest/v1/billing/start` that will be triggered to start processing invoices. This offers an  This is rather a trivial solution however it falls short as it will require manual triggering and additionally more endpoints or config payload maybe required for a fine grained controlling the scheduling.
