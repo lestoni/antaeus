@@ -86,3 +86,21 @@ The code given is structured as follows. Feel free however to modify the structu
 * [Sqlite3](https://sqlite.org/index.html) - Database storage engine
 
 Happy hacking 😁!
+
+
+## Hacking Thoughts 
+
+At look at the challenge, it is clear we are developing a recurring payment charging scheduler. In order to design the proper architecture approach we go through different iterations to achieve the logic.
+
+1. First iteration(Simple logic): Retrieve pending invoices, charge the customer and change invoice status to pending
+
+### Technical Questions
+
+- How/When to track failed payment charging ?
+- How to handle different timezones for each customer ?
+- How to process large amounts of invoices, batch processsing or queueing mechanism
+- Is the scheduler manually triggered or rans as such as a cron job ?
+
+### Improvements
+
+- Open Api spec
