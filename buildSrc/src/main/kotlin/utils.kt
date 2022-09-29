@@ -12,6 +12,7 @@ fun Project.kotlinProject() {
     dependencies {
         // Kotlin libs
         "implementation"(kotlin("stdlib"))
+        "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
         // Logging
         "implementation"("org.slf4j:slf4j-simple:1.7.30")
