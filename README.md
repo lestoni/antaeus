@@ -90,17 +90,49 @@ Happy hacking 😁!
 
 ## Hacking Thoughts 
 
-At look at the challenge, it is clear we are developing a recurring payment charging scheduler. In order to design the proper architecture approach we go through different iterations to achieve the logic.
+At look at the challenge, it is clear we are developing a recurring payment charging scheduler. In order to design the proper architecture approach i thought of the following solutions:
 
-1. First iteration(Simple logic): Retrieve pending invoices, charge the customer and change invoice status to pending
+- Create an endpoint `POST /rest/v1/billing/start` that will be triggered to start processing invoices. This offers an  This is rather a trivial solution however it falls short as it will require manual triggering and additionally more endpoints or config payload maybe required for a fine grained controlling the scheduling.
+- Incorporating a cron or concurrent timer mechanism that runs on specified run time. 
+- Use of a queuing or caching mechanism i.e ZeroMQ, Redis, Memcache etc. This is a more scalable solution as customers grow(implying growth of invoices too). As soon as an invoice is created, it's required data is stored in queue and can be processed when recurring clock approaches. This however requires additional tool resources for infrastructure to achieve it.
 
-### Technical Questions
 
-- How/When to track failed payment charging ?
+Out of the three approaches, i opted to use concurrent timers or cron job for this solution to keep it simple; as the needs for improvement grows, last solution can be used.
+
+### Product/Technical Questions
+
+- How to track failed payment charging and what to do with them ?
+        - Added as part of general improvement
 - How to handle different timezones for each customer ?
-- How to process large amounts of invoices, batch processsing or queueing mechanism
+        - This is out of scope for this challenge
+- How to handle growing large amounts of invoices, to do batch processsing or queueing mechanism ?
+        - I query for invoices in batches of 100 but configurable as such how pagination works
 - Is the scheduler manually triggered or rans as such as a cron job ?
+        - Solution uses concurrent timer that runs periodically i.e every month
+- How often to retry the failed invoices ?
+        - The scheduler retries up-to 2 times at which and endpoint is provided(part of general improvements)
+- How to handle payment Provider failures, do we retry and stop jobs then report errors ?
+        - See General Improvements
+- How to report concurrent timer errors ?
 
-### Improvements
+### Billing Service
 
-- Open Api spec
+The billing service will maintain the following functionalities:
+- Retrieving Pending Invoices for processing recurring monthly ones
+- Retrieving Failed Invoices to retry charging
+- Charging a customer via payment Provider for an invoice
+- Updating status of Invoices to either PAID or FAILED
+
+
+### Scheduler Service
+
+This is a configurable general service whose functionality is to run services that need to be scheduled for specific times aka job(s) schedule.
+
+For the purpose of this challenge, we will have only billing service as a job running in the scheduler service
+
+
+### General Improvements
+
+- An endpoint to be triggered for a failed invoice payment once the threshold; this is useful for the api consumers to trigger payment once it can be done again.
+- Best to keep billing logs for auditing.
+- To handle failures/errors from payment providers we could use a circuit breaker
