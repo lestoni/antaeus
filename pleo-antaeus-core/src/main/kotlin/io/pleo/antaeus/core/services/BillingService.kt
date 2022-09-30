@@ -19,7 +19,7 @@ class BillingService(
     private val dal: AntaeusDal
 ) {
     
-    fun start() {
+    fun run() {
         runBlocking {
             logger.info { "Billing Service has Started" }
             processPendingInvoices()
