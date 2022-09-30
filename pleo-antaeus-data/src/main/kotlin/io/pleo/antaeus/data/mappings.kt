@@ -19,7 +19,9 @@ fun ResultRow.toInvoice(): Invoice = Invoice(
         currency = Currency.valueOf(this[InvoiceTable.currency])
     ),
     status = InvoiceStatus.valueOf(this[InvoiceTable.status]),
-    customerId = this[InvoiceTable.customerId]
+    customerId = this[InvoiceTable.customerId],
+    settlementTries = this[InvoiceTable.settlementTries],
+    failureReason = this[InvoiceTable.failureReason]
 )
 
 fun ResultRow.toCustomer(): Customer = Customer(
