@@ -24,7 +24,7 @@ class AntaeusRest(
 
     override fun run() {
         app.start(7000)
-        schedulerService.start()
+        schedulerService.run()
     }
 
     // Set up Javalin rest app
