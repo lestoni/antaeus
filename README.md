@@ -138,3 +138,4 @@ For the purpose of this challenge, we will have only billing service as a job ru
 - An endpoint to be triggered for a failed invoice payment once the threshold; this is useful for the api consumers to trigger payment once it can be done again.
 - Best to keep billing logs for auditing.
 - To handle failures/errors from payment providers we could use a circuit breaker
+- Dispatch notification to the customer upon charging for an invoice either succeeded or failed. It could be an email or push notification or SMS e.t.c
