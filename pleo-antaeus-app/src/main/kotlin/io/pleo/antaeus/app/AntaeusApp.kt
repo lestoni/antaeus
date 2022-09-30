@@ -62,7 +62,10 @@ fun main() {
     val customerService = CustomerService(dal = dal)
 
     // This is _your_ billing service to be included where you see fit
-    val billingService = BillingService(paymentProvider = paymentProvider, dal = dal)
+    val billingService = BillingService(
+        invoiceService = invoiceService,
+        paymentProvider = paymentProvider
+    )
 
     // Instantiates Scheduling Service responsible for all background/scheduled jobs
     val schedulerService = SchedulerService(billingService = billingService)
