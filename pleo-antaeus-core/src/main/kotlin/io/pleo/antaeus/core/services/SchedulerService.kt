@@ -38,8 +38,10 @@ class SchedulerService(
 
     private fun startJob() {
         // We determine day of the Month which should the first day
+        // To handle settlement_tries when we can't charge the customer
+        // We try for 3 days
         val dayOfMonth = LocalDate.now(clock).dayOfMonth
-        if(dayOfMonth != 1) {
+        if(dayOfMonth !in 1..3) {
             logger.info { "Scheduled Job Skipped" }
             return
         }
