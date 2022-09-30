@@ -18,6 +18,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
 
 class AntaeusDal(private val db: Database) {
     fun fetchInvoice(id: Int): Invoice? {
@@ -39,13 +40,32 @@ class AntaeusDal(private val db: Database) {
         }
     }
 
-    fun updateInvoiceStatus(id: Int, status: InvoiceStatus): Int {
-        return transaction(db) {
+    fun updateInvoiceStatus(id: Int, status: InvoiceStatus, failureReason: String?): Invoice? {
+        val updateInvoiceId = transaction(db) {
             InvoiceTable
                 .update({ InvoiceTable.id eq id }) {
                     it[this.status] = status.name
+
+                    if(failureReason != null) {
+                        it[this.failureReason] = failureReason
+                    }
                 }
         }
+
+        return fetchInvoice(updateInvoiceId)
+    }
+
+    fun updateInvoiceSettlementTries(id: Int): Invoice? {
+        val updateInvoiceId = transaction(db) {
+            InvoiceTable
+                .update({ InvoiceTable.id eq id }) {
+                    with(SqlExpressionBuilder) {
+                        it.update(settlementTries, settlementTries + 1)
+                    }
+                }
+        }
+
+        return fetchInvoice(updateInvoiceId)
     }
 
     fun fetchInvoicesByStatus(status: InvoiceStatus, max: Int = 100): List<Invoice> {
@@ -66,6 +86,7 @@ class AntaeusDal(private val db: Database) {
                     it[this.currency] = amount.currency.toString()
                     it[this.status] = status.toString()
                     it[this.customerId] = customer.id
+                    it[this.settlementTries] = 0
                 } get InvoiceTable.id
         }
 
