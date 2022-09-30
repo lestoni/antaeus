@@ -2,7 +2,6 @@ package io.pleo.antaeus.core.services
 
 import mu.KotlinLogging
 import io.pleo.antaeus.core.external.PaymentProvider
-import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.core.exceptions.NetworkException
@@ -15,8 +14,8 @@ import kotlinx.coroutines.runBlocking
 private val logger = KotlinLogging.logger {}
 
 class BillingService(
-    private val paymentProvider: PaymentProvider,
-    private val dal: AntaeusDal
+    private val invoiceService: InvoiceService,
+    private val paymentProvider: PaymentProvider
 ) {
     
     fun run() {
@@ -28,7 +27,7 @@ class BillingService(
     }
 
     suspend private fun processPendingInvoices() {
-        val pendingInvoices = dal.fetchInvoicesByStatus(InvoiceStatus.PENDING)
+        val pendingInvoices = invoiceService.fetchPendingInvoices()
 
         return pendingInvoices
             .asFlow()
@@ -52,19 +51,21 @@ class BillingService(
         }
 
         try {
+
             val paymentSucceeded = paymentProvider.charge(invoice)
 
             if (paymentSucceeded) {
-                dal.updateInvoiceStatus(invoice.id, InvoiceStatus.PAID)
+                invoiceService.setInvoiceAsPaid(invoice.id)
             } else {
-                dal.updateInvoiceStatus(invoice.id, InvoiceStatus.FAILED)
+                determineSettlementRetries(invoice, "Payment Method Failed!")
             }
 
         } catch (e: Exception) {
-            // Before returning the error upstream, we mark the invoice as FAILED
-            dal.updateInvoiceStatus(invoice.id, InvoiceStatus.FAILED)
+            // It doesn't make sense to set status of an invoice as FAILED yet
+            // Maybe there was a network timeout issue, hence makes sense to retry again
+            determineSettlementRetries(invoice, e.toString())
 
-            // FIXME: Errors should be mapped corretly to be user-friendly
+            // FIXME: Errors should be mapped correctly to be user-friendly
             // For now we will only log
             when(e) {
                 is NetworkException -> {
@@ -75,6 +76,16 @@ class BillingService(
                 }
             }
         }
+    }
+
+    private fun determineSettlementRetries(invoice: Invoice, failureReason: String) {
+        // Determine if this is the last invoice settlement_tries 
+        // and then mark as Failed
+        if(invoice.settlementTries == 3) {
+            invoiceService.setInvoiceAsFailed(invoice.id, failureReason)
+        } else {
+            invoiceService.setInvoiceForPaymentRetry(invoice.id)
+        } 
     }
 
 }
